@@ -1,25 +1,16 @@
+mod api;
 mod db;
 mod func;
 mod models;
 
-use func::*;
-use models::*;
-use std::env;
-
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub use api::*;
+pub use func::*;
+pub use models::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-
+    use std::env;
     #[tokio::test]
     async fn test_connection() {
         let uri = env::var("DEV_POSTGRES_URI").expect("Uri should be defined for test");

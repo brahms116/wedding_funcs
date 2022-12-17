@@ -10,12 +10,6 @@ pub enum RepoErr {
     DBFailure(String),
 }
 
-#[derive(Error, Debug)]
-pub enum ApiErr {
-    #[error(transparent)]
-    RepoErr(#[from] RepoErr),
-}
-
 #[async_trait]
 pub trait InviteeRepo {
     async fn get_invitee_by_id(&self, id: &str) -> Result<InviteeDTO, RepoErr>;
