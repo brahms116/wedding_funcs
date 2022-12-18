@@ -6,6 +6,8 @@ use thiserror::Error;
 pub enum ApiErr {
     #[error(transparent)]
     RepoErr(#[from] RepoErr),
+    #[error("Bad arguments: {0}")]
+    ArgumentErr(String),
 }
 
 #[derive(Deserialize, Serialize)]
