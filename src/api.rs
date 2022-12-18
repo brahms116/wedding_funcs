@@ -6,7 +6,7 @@ use thiserror::Error;
 pub enum ApiErr {
     #[error(transparent)]
     RepoErr(#[from] RepoErr),
-    #[error("Bad arguments: {0}")]
+    #[error("Bad argument: {0}")]
     ArgumentErr(String),
 }
 
@@ -19,7 +19,7 @@ pub enum Payload {
     UpdateInvitation { invitation: InvitationATO },
 }
 
-pub async fn route<T: InviteeRepo + RelationRepo>(
+pub async fn handle_request<T: InviteeRepo + RelationRepo>(
     params: Payload,
     db_service: T,
 ) -> Result<InvitationATO, ApiErr> {

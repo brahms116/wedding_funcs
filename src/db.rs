@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use tokio_postgres::Client;
 
 pub struct DB<'a> {
-    client: &'a Client,
+    pub client: &'a Client,
 }
 
 #[async_trait]
@@ -128,6 +128,8 @@ impl<'a> InviteeRepo for DB<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::env;
+
     use super::*;
     use uuid::Uuid;
 
@@ -345,7 +347,7 @@ mod tests {
         let db = DB { client: &client };
         let params = UpdateInviteeParams {
             id: id.clone(),
-            rsvp: true,
+            rsvp: Some(true),
             dietary_requirements: "Something new".to_string(),
         };
         let invite = db

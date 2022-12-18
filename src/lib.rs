@@ -4,12 +4,12 @@ mod func;
 mod models;
 
 pub use api::*;
+pub use db::*;
 pub use func::*;
 pub use models::*;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::env;
     #[tokio::test]
     async fn test_connection() {
