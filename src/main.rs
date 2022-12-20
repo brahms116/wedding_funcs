@@ -23,7 +23,7 @@ async fn main() -> Result<(), StdErr> {
 }
 
 async fn handle(event: LambdaEvent<Value>) -> Result<Value, StdErr> {
-    println!("Lambda function called");
+    println!("Lambda function called again");
     let (event, _context) = event.into_parts();
     let params = parse_params_from_request(&event);
 
