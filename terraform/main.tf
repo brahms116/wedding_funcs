@@ -1,6 +1,6 @@
 resource "null_resource" "copy_build" {
   provisioner "local-exec" {
-    command     = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
+    command = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
     working_dir = "../"
   }
 
@@ -44,7 +44,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.wedding_func.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.wedding_api.execution_arn}/*/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.wedding_api.execution_arn}/*/POST/api"
 }
 
 resource "aws_lambda_function" "wedding_func" {
@@ -55,7 +55,7 @@ resource "aws_lambda_function" "wedding_func" {
   handler          = "bootstrap"
   runtime          = "provided.al2"
   architectures    = ["arm64"]
-  depends_on       = [null_resource.copy_build]
+  depends_on = [null_resource.copy_build]
 }
 
 resource "aws_iam_role" "role" {
