@@ -11,7 +11,7 @@ impl<'a> RelationRepo for DB<'a> {
     async fn get_dependents(&self, id: &str) -> Result<Vec<String>, RepoErr> {
         let result = self
             .client
-            .query("SELECT child WHERE parent = $1::TEXT", &[&id])
+            .query("SELECT child FROM relation WHERE parent = $1::TEXT", &[&id])
             .await
             .map_err(|e| RepoErr::DBFailure(e.to_string()))?;
 
