@@ -11,6 +11,7 @@ pub enum ApiErr {
 }
 
 #[derive(Deserialize, Serialize)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 #[serde(tag = "function", content = "params")]
 pub enum Payload {
     #[serde(rename = "fetchInvitation")]
@@ -28,5 +29,31 @@ pub async fn handle_request<T: InviteeRepo + RelationRepo>(
         Payload::UpdateInvitation { invitation } => {
             update_invitation(&invitation, db_service).await
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn payload_should_deserialize() {
+        let json = json!({
+            "function":"fetchInvitation",
+            "params": {
+                "id":"myid"
+            }
+        });
+
+        let payload: Result<Payload, _> = serde_json::from_value(json);
+
+        let payload = payload.expect("should parse properly");
+
+        let correct = Payload::FetchInvitation {
+            id: String::from("myid"),
+        };
+
+        assert_eq!(payload, correct);
     }
 }

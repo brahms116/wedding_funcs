@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
 #[derive(Deserialize, Serialize, Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 #[serde(rename_all = "camelCase")]
 pub struct InviteeDTO {
     pub id: String,
@@ -45,6 +46,7 @@ impl TryFrom<&Row> for InviteeDTO {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 #[serde(rename_all = "camelCase")]
 pub struct InvitationATO {
     pub primary_invitee: InviteeDTO,
