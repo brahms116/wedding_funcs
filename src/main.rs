@@ -49,7 +49,7 @@ async fn handle(event: LambdaEvent<Value>) -> Result<Value, StdErr> {
     let result = handle_request(params, db).await;
 
     match result {
-        Ok(value) => Ok(lambda_response(json!(value), 200)),
+        Ok(value) => Ok(lambda_response(json!({ "data": value }), 200)),
         Err(err) => Ok(HttpError::from(err).into()),
     }
 }

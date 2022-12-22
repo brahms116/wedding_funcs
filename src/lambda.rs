@@ -2,6 +2,7 @@ use serde_json::{json, Value};
 
 pub struct HttpError {
     pub status_code: i32,
+    pub err_type: String,
     pub msg: Option<String>,
 }
 
@@ -11,7 +12,7 @@ impl Into<Value> for HttpError {
             Some(description) => json!(description),
             None => Value::Null,
         };
-        lambda_response(json!({ "msg": msg }), self.status_code)
+        lambda_response(json!({"err":{"msg": msg}}), self.status_code)
     }
 }
 
