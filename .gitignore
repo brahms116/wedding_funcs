@@ -3,4 +3,6 @@
 **/.terraform/*
 *.tfstate
 *.tfstate.*
+bootstrap
+bootstrap.zip
 

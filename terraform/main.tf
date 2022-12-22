@@ -1,3 +1,10 @@
+resource "null_resource" "copy_build" {
+  provisioner "local-exec" {
+    command = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
+    working_dir = "../"
+  }
+}
+
 provider "aws" {
   region = "ap-southeast-2"
 }
@@ -40,7 +47,7 @@ resource "aws_lambda_function" "wedding_func" {
   function_name    = "WeddingFunction"
   filename         = "../bootstrap.zip"
   role             = aws_iam_role.role.arn
-  source_code_hash = filebase64sha256("../bootstrap.zip")
+  source_code_hash = timestamp()
   handler          = "bootstrap"
   runtime          = "provided.al2"
   architectures    = ["arm64"]
