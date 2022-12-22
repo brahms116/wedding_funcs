@@ -10,7 +10,8 @@ use wedding_funcs::*;
 
 fn parse_params_from_request(request: &Value) -> Option<Payload> {
     let body = request.get("body")?;
-    serde_json::from_value(body.clone()).ok()?
+    let body = body.as_str()?;
+    serde_json::from_str(body.clone()).ok()?
 }
 
 type StdErr = Box<dyn std::error::Error + Send + Sync>;
