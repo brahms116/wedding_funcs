@@ -1,7 +1,11 @@
 resource "null_resource" "copy_build" {
   provisioner "local-exec" {
-    command = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
+    command     = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
     working_dir = "../"
+  }
+
+  triggers = {
+    rebuild = timestamp()
   }
 }
 
@@ -51,6 +55,7 @@ resource "aws_lambda_function" "wedding_func" {
   handler          = "bootstrap"
   runtime          = "provided.al2"
   architectures    = ["arm64"]
+  depends_on       = [null_resource.copy_build]
 }
 
 resource "aws_iam_role" "role" {
