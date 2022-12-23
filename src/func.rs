@@ -47,7 +47,7 @@ pub async fn fetch_invitation<T: InviteeRepo + RelationRepo>(
 
     Ok(InvitationATO {
         primary_invitee,
-        depedents: dependents.unwrap_or(vec![]),
+        dependents: dependents.unwrap_or(vec![]),
     })
 }
 
@@ -65,10 +65,10 @@ pub async fn update_invitation<T: InviteeRepo>(
 
     result.primary_invitee = primary;
 
-    if invitation.depedents.len() > 0 {
+    if invitation.dependents.len() > 0 {
         let mut dependents_result: Vec<InviteeDTO> = vec![];
 
-        for invitee in &invitation.depedents {
+        for invitee in &invitation.dependents {
             let param = UpdateInviteeParams::from(invitee);
             let dependent_result = db
                 .update_invitee(&param)
@@ -77,7 +77,7 @@ pub async fn update_invitation<T: InviteeRepo>(
             dependents_result.push(dependent_result);
         }
 
-        result.depedents = dependents_result
+        result.dependents = dependents_result
     }
 
     Ok(result)

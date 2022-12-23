@@ -50,7 +50,7 @@ impl TryFrom<&Row> for InviteeDTO {
 #[serde(rename_all = "camelCase")]
 pub struct InvitationATO {
     pub primary_invitee: InviteeDTO,
-    pub depedents: Vec<InviteeDTO>,
+    pub dependents: Vec<InviteeDTO>,
 }
 
 pub struct UpdateInviteeParams {
