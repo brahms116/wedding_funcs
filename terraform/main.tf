@@ -1,6 +1,10 @@
+data "aws_ssm_parameter" "postgres_uri" {
+  name = "WedPostgresUriDev"
+}
+
 resource "null_resource" "copy_build" {
   provisioner "local-exec" {
-    command = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
+    command     = "cp target/aarch64-unknown-linux-musl/release/wedding_funcs bootstrap && zip bootstrap.zip bootstrap"
     working_dir = "../"
   }
 
@@ -39,6 +43,25 @@ resource "aws_api_gateway_integration" "api_integration" {
   uri                     = aws_lambda_function.wedding_func.invoke_arn
 }
 
+resource "aws_api_gateway_deployment" "wedding_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.wedding_api.id
+
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.wedding_api.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "PROD" {
+  deployment_id = aws_api_gateway_deployment.wedding_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.wedding_api.id
+  stage_name    = "PROD"
+}
+
+
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromLambda"
   action        = "lambda:InvokeFunction"
@@ -55,6 +78,11 @@ resource "aws_lambda_function" "wedding_func" {
   handler          = "bootstrap"
   runtime          = "provided.al2"
   architectures    = ["arm64"]
+  environment {
+    variables = {
+      WED_POSTGRES_URI = data.aws_ssm_parameter.postgres_uri.value
+    }
+  }
   depends_on = [null_resource.copy_build]
 }
 
