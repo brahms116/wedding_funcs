@@ -96,7 +96,7 @@ impl<'a> InviteeRepo for DB<'a> {
                 if t {
                     "Coming"
                 } else {
-                    "Not Coming"
+                    "NotComing"
                 }
             }
             None => "Unknown",
