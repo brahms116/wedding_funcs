@@ -34,6 +34,49 @@ resource "aws_api_gateway_method" "api_method" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method" "options_method" {
+  rest_api_id   = aws_api_gateway_rest_api.wedding_api.id
+  resource_id   = aws_api_gateway_resource.api_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "cors_method_response" {
+    rest_api_id   = aws_api_gateway_rest_api.wedding_api.id
+    resource_id   = aws_api_gateway_resource.api_resource.id
+    http_method   = aws_api_gateway_method.options_method.http_method
+    status_code   = 200
+    response_parameters = {
+        "method.response.header.Access-Control-Allow-Headers" = true,
+        "method.response.header.Access-Control-Allow-Methods" = true,
+        "method.response.header.Access-Control-Allow-Origin" = true
+    }
+}
+
+resource "aws_api_gateway_integration" "cors_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.wedding_api.id
+  resource_id             = aws_api_gateway_resource.api_resource.id
+  http_method             = aws_api_gateway_method.options_method.http_method
+  type                    = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_integration_response" "cors_integration_response" {
+  rest_api_id             = aws_api_gateway_rest_api.wedding_api.id
+  resource_id             = aws_api_gateway_resource.api_resource.id
+  http_method             = aws_api_gateway_method.options_method.http_method
+  status_code             = 200
+  response_parameters = {
+        "method.response.header.Access-Control-Allow-Origin" = "'*'",
+        "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'"
+  }
+}
+
 resource "aws_api_gateway_integration" "api_integration" {
   rest_api_id             = aws_api_gateway_rest_api.wedding_api.id
   resource_id             = aws_api_gateway_resource.api_resource.id
@@ -47,12 +90,14 @@ resource "aws_api_gateway_deployment" "wedding_deployment" {
   rest_api_id = aws_api_gateway_rest_api.wedding_api.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.wedding_api.body))
+    redeployment = timestamp()
   }
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [aws_api_gateway_rest_api.wedding_api]
 }
 
 resource "aws_api_gateway_stage" "PROD" {
