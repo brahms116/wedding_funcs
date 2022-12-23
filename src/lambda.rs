@@ -12,7 +12,10 @@ impl Into<Value> for HttpError {
             Some(description) => json!(description),
             None => Value::Null,
         };
-        lambda_response(json!({"err":{"msg": msg}}), self.status_code)
+        lambda_response(
+            json!({"err":{"msg": msg, "errType":self.err_type}}),
+            self.status_code,
+        )
     }
 }
 
