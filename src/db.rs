@@ -1,6 +1,7 @@
 use super::*;
 use async_trait::async_trait;
 use tokio_postgres::Client;
+use tracing::{event, Level};
 
 pub struct DB<'a> {
     pub client: &'a Client,
@@ -22,6 +23,7 @@ impl<'a> RelationRepo for DB<'a> {
 
 #[async_trait]
 impl<'a> InviteeRepo for DB<'a> {
+    #[tracing::instrument(skip(self))]
     async fn get_invitee_by_id(&self, id: &str) -> Result<InviteeDTO, RepoErr> {
         let result = self.client.query(
             "SELECT id, fname, lname, rsvp, dietary_requirements FROM invitee WHERE id = $1::TEXT",
@@ -29,6 +31,7 @@ impl<'a> InviteeRepo for DB<'a> {
         ).await;
 
         if let Err(err) = result {
+            event!(Level::ERROR, "Failed to run find invitee query");
             return Err(RepoErr::DBFailure(err.to_string()));
         }
         let result = result.expect("Should handle err");
@@ -48,12 +51,28 @@ impl<'a> InviteeRepo for DB<'a> {
             .await;
 
         if let Err(err) = update_result {
+            event!(
+                Level::ERROR,
+                "Failed to update invitation_opened status for invitee"
+            );
             return Err(RepoErr::DBFailure(err.to_string()));
         }
 
-        Ok(InviteeDTO::try_from(result).map_err(|e| RepoErr::DBFailure(e.to_string()))?)
+        let invitee = InviteeDTO::try_from(result).map_err(|e| RepoErr::DBFailure(e.to_string()));
+
+        if let Err(err) = invitee {
+            event!(
+                Level::ERROR,
+                msg = "Failed to parse db row into invitee",
+                ?result
+            );
+            return Err(err);
+        }
+
+        Ok(invitee.expect("Should handle err"))
     }
 
+    #[tracing::instrument(skip(self))]
     async fn get_invitee_by_ids(&self, ids: &Vec<&str>) -> Result<Vec<InviteeDTO>, RepoErr> {
         let result = self
             .client
@@ -65,6 +84,10 @@ impl<'a> InviteeRepo for DB<'a> {
             .await;
 
         if let Err(err) = result {
+            event!(
+                Level::ERROR,
+                "Failed to run query for fetching multiple invitees"
+            );
             return Err(RepoErr::DBFailure(err.to_string()));
         }
         let result = result.expect("Should handle err");
@@ -78,6 +101,10 @@ impl<'a> InviteeRepo for DB<'a> {
             .await;
 
         if let Err(err) = update_result {
+            event!(
+                Level::ERROR,
+                "Failed to update invitees' invitation_opened status"
+            );
             return Err(RepoErr::DBFailure(err.to_string()));
         }
 
@@ -85,11 +112,14 @@ impl<'a> InviteeRepo for DB<'a> {
             result.iter().map(|e| InviteeDTO::try_from(e)).collect();
 
         if let Err(err) = invitees {
+            event!(Level::ERROR, "Failed to parse invitees from db result");
             return Err(RepoErr::DBFailure(err.to_string()));
         }
 
         Ok(invitees.unwrap())
     }
+
+    #[tracing::instrument(skip(self))]
     async fn update_invitee(&self, invitee: &UpdateInviteeParams) -> Result<InviteeDTO, RepoErr> {
         let rsvp = match invitee.rsvp {
             Some(t) => {
@@ -113,16 +143,29 @@ impl<'a> InviteeRepo for DB<'a> {
             )
             .await;
         if let Err(err) = result {
+            event!(Level::ERROR, "Failed to run query to rsvp");
             return Err(RepoErr::DBFailure(err.to_string()));
         }
         let result = result.expect("Should handle err");
         let result = result.get(0);
         if let None = result {
+            event!(Level::ERROR, "Failed to find invitee");
             return Err(RepoErr::ItemNotFound(invitee.id.clone()));
         }
         let result = result.expect("Should handle None");
-        let result = InviteeDTO::try_from(result).map_err(|e| RepoErr::DBFailure(e.to_string()))?;
-        Ok(result)
+
+        let invitee = InviteeDTO::try_from(result).map_err(|e| RepoErr::DBFailure(e.to_string()));
+
+        if let Err(err) = invitee {
+            event!(
+                Level::ERROR,
+                msg = "Failed to parse db row into invitee",
+                ?result
+            );
+            return Err(err);
+        }
+
+        Ok(invitee.expect("Should handle err"))
     }
 }
 

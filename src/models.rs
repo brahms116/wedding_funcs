@@ -53,6 +53,7 @@ pub struct InvitationATO {
     pub dependents: Vec<InviteeDTO>,
 }
 
+#[derive(Debug)]
 pub struct UpdateInviteeParams {
     pub id: String,
     pub rsvp: Option<bool>,

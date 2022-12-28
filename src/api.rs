@@ -20,6 +20,7 @@ pub enum Payload {
     UpdateInvitation { invitation: InvitationATO },
 }
 
+#[tracing::instrument(skip(db_service))]
 pub async fn handle_request<T: InviteeRepo + RelationRepo>(
     params: Payload,
     db_service: T,
