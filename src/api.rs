@@ -10,8 +10,8 @@ pub enum ApiErr {
     ArgumentErr(String),
 }
 
-#[derive(Deserialize, Serialize)]
-#[cfg_attr(test, derive(PartialEq, Debug))]
+#[derive(Deserialize, Serialize, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[serde(tag = "function", content = "params")]
 pub enum Payload {
     #[serde(rename = "fetchInvitation")]
