@@ -8,9 +8,9 @@ data "aws_ssm_parameter" "postgres_uri" {
 }
 
 data "archive_file" "lambda_zip" {
-    source_file     = "../../target/aarch64-unknown-linux-musl/release/bootstrap"
-    output_path     = "../../bootstrap.zip"
-    type            = "zip"
+  source_file = "../../target/aarch64-unknown-linux-musl/release/bootstrap"
+  output_path = "../../bootstrap.zip"
+  type        = "zip"
 }
 
 resource "aws_api_gateway_rest_api" "wedding_api" {
@@ -21,7 +21,7 @@ resource "aws_api_gateway_resource" "api_resource" {
   path_part   = "api"
   parent_id   = aws_api_gateway_rest_api.wedding_api.root_resource_id
   rest_api_id = aws_api_gateway_rest_api.wedding_api.id
-  depends_on = [aws_api_gateway_rest_api.wedding_api]
+  depends_on  = [aws_api_gateway_rest_api.wedding_api]
 }
 
 resource "aws_api_gateway_method" "api_method" {
@@ -29,7 +29,7 @@ resource "aws_api_gateway_method" "api_method" {
   resource_id   = aws_api_gateway_resource.api_resource.id
   http_method   = "POST"
   authorization = "NONE"
-  depends_on = [aws_api_gateway_resource.api_resource]
+  depends_on    = [aws_api_gateway_resource.api_resource]
 }
 
 resource "aws_api_gateway_method" "options_method" {
@@ -37,7 +37,7 @@ resource "aws_api_gateway_method" "options_method" {
   resource_id   = aws_api_gateway_resource.api_resource.id
   http_method   = "OPTIONS"
   authorization = "NONE"
-  depends_on = [aws_api_gateway_resource.api_resource]
+  depends_on    = [aws_api_gateway_resource.api_resource]
 }
 
 resource "aws_api_gateway_method_response" "cors_method_response" {
@@ -152,4 +152,9 @@ resource "aws_iam_role" "role" {
   ]
 }
 POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "basic_execution_attachment" {
+  role       = aws_iam_role.role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
