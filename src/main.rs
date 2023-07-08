@@ -5,6 +5,8 @@ use std::env;
 
 use lambda::*;
 use lambda_runtime::{service_fn, LambdaEvent};
+use openssl::ssl::{SslConnector, SslMethod};
+use postgres_openssl::MakeTlsConnector;
 use serde_json::{json, Value};
 use tracing::{event, Level};
 use tracing_subscriber;
@@ -57,8 +59,15 @@ async fn handle(event: LambdaEvent<Value>) -> Result<Value, StdErr> {
 
     let params = params.expect("Should handle err");
 
+    let cert_path =
+        std::env::var("SSL_CERT_PATH").expect("SSL root certificat path should be defined in env");
+
+    let mut builder = SslConnector::builder(SslMethod::tls()).unwrap();
+    builder.set_ca_file(cert_path).unwrap();
+    let connector = MakeTlsConnector::new(builder.build());
+
     let uri = env::var("WED_POSTGRES_URI").expect("Uri should be defined in env");
-    let (client, connection) = tokio_postgres::connect(&uri, tokio_postgres::NoTls)
+    let (client, connection) = tokio_postgres::connect(&uri, connector)
         .await
         .expect("Connection should not fail");
 

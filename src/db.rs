@@ -174,22 +174,37 @@ mod tests {
     use std::env;
 
     use super::*;
+    use openssl::ssl::{SslConnector, SslMethod};
+    use postgres_openssl::MakeTlsConnector;
     use uuid::Uuid;
 
-    #[tokio::test]
-    async fn should_get_invitee_by_id() {
-        let uri = env::var("DEV_POSTGRES_URI").expect("Uri should be defined for test");
-        let (client, connection) =
-            tokio_postgres::connect(&format!("{}/wedding_dev", uri), tokio_postgres::NoTls)
-                .await
-                .expect("Connection should not fail");
+    async fn get_pg_client() -> Client {
+
+        let uri = env::var("WED_POSTGRES_URI").expect("Uri should be defined for test");
+        let cert_path = env::var("SSL_CERT_PATH").expect("ssl_cert_path should be defined for test");
+
+        let mut builder = SslConnector::builder(SslMethod::tls()).unwrap();
+        builder
+            .set_ca_file(cert_path)
+            .unwrap();
+        let connector = MakeTlsConnector::new(builder.build());
+
+        let (client, connection) = tokio_postgres::connect(&format!("{}", uri), connector)
+            .await
+            .expect("Connection should not fail");
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
                 eprintln!("connection error: {}", e);
             }
         });
+        client
+    }
 
+    #[tokio::test]
+    async fn should_get_invitee_by_id() {
+
+        let client = get_pg_client().await;
         let id: String = Uuid::new_v4().to_string();
 
         // setup
@@ -237,17 +252,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_get_invitee_by_ids() {
-        let uri = env::var("DEV_POSTGRES_URI").expect("Uri should be defined for test");
-        let (client, connection) =
-            tokio_postgres::connect(&format!("{}/wedding_dev", uri), tokio_postgres::NoTls)
-                .await
-                .expect("Connection should not fail");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
+        let client = get_pg_client().await;
 
         let id: String = Uuid::new_v4().to_string();
         let id2: String = Uuid::new_v4().to_string();
@@ -347,18 +352,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_update_invitee() {
-        let uri = env::var("DEV_POSTGRES_URI").expect("Uri should be defined for test");
-        let (client, connection) =
-            tokio_postgres::connect(&format!("{}/wedding_dev", uri), tokio_postgres::NoTls)
-                .await
-                .expect("Connection should not fail");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
-
+        let client = get_pg_client().await;
         let id: String = Uuid::new_v4().to_string();
 
         // setup
