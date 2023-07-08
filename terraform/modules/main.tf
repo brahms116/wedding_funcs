@@ -128,6 +128,7 @@ resource "aws_lambda_function" "wedding_func" {
   architectures    = ["arm64"]
   environment {
     variables = {
+      SSL_CERT_PATH    = "/etc/ssl/certs/ca-certificates.crt",
       WED_POSTGRES_URI = data.aws_ssm_parameter.postgres_uri.value
     }
   }
