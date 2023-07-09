@@ -3,12 +3,22 @@ variable "environment" {
   description = "The name of the environment terraform should build for"
 }
 
+variable "image_uri" {
+  type        = string
+  description = "The URI of the docker image to deploy"
+  default     = "476915837883.dkr.ecr.ap-southeast-2.amazonaws.com/wedding-funcs-manual"
+}
+
 data "aws_ssm_parameter" "postgres_uri" {
   name = "wedding-postgres-uri-${var.environment}"
 }
 
 resource "aws_api_gateway_rest_api" "wedding_api" {
   name = "wedding-api-${var.environment}"
+}
+
+locals {
+  image_tag = var.environment == "prod" ? "latest" : var.environment
 }
 
 resource "aws_api_gateway_resource" "api_resource" {
@@ -115,7 +125,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
 resource "aws_lambda_function" "wedding_func" {
   function_name = "wedding-api-function-${var.environment}"
   role          = aws_iam_role.role.arn
-  image_uri     = "476915837883.dkr.ecr.ap-southeast-2.amazonaws.com/wedding-funcs-manual:latest"
+  image_uri     = "${var.image_uri}:${local.image_tag}"
   package_type  = "Image"
   architectures = ["arm64"]
   environment {

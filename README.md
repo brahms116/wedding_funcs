@@ -10,8 +10,15 @@ can be found in the terraform configuration in the `terraform/modules` directory
 
 ### Deployment
 
-Currently, this function and api can only be deployed manually. There are two environements configured under `terraform/dev` and `terraform/prod`.
-Terraform currently looks for a binary `target/aarch64-unknown-linux-musl/release/bootstrap` to archive and upload
+Currently, this function and api can only be deployed manually.
+
+The function uses a ecr docker image, specified by the terraform variable `image_uri`.
+
+The tag for production is `latest` and `dev` for develop.
+
+Build the image locally and push it into ecr.
+
+There are two environements configured under `terraform/dev` and `terraform/prod`.
 To deploy for an environment, navigate into the respective directory, then run...
 
 ```bash
@@ -24,3 +31,4 @@ terraform apply
 
 - Document api endpoints
 - Terraform deployment should be done inside github actions
+- Docker container build should be done inside github actions
