@@ -7,12 +7,6 @@ data "aws_ssm_parameter" "postgres_uri" {
   name = "wedding-postgres-uri-${var.environment}"
 }
 
-data "archive_file" "lambda_zip" {
-  source_file = "../../target/aarch64-unknown-linux-musl/release/bootstrap"
-  output_path = "../../bootstrap.zip"
-  type        = "zip"
-}
-
 resource "aws_api_gateway_rest_api" "wedding_api" {
   name = "wedding-api-${var.environment}"
 }
@@ -119,20 +113,17 @@ resource "aws_lambda_permission" "apigw_lambda" {
 }
 
 resource "aws_lambda_function" "wedding_func" {
-  function_name    = "wedding-api-function-${var.environment}"
-  filename         = "../../bootstrap.zip"
-  role             = aws_iam_role.role.arn
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-  handler          = "bootstrap"
-  runtime          = "provided.al2"
-  architectures    = ["arm64"]
+  function_name = "wedding-api-function-${var.environment}"
+  role          = aws_iam_role.role.arn
+  image_uri     = "476915837883.dkr.ecr.ap-southeast-2.amazonaws.com/wedding-funcs-manual:latest"
+  package_type  = "Image"
+  architectures = ["arm64"]
   environment {
     variables = {
       SSL_CERT_PATH    = "/etc/ssl/certs/ca-certificates.crt",
       WED_POSTGRES_URI = data.aws_ssm_parameter.postgres_uri.value
     }
   }
-  depends_on = [data.archive_file.lambda_zip]
 }
 
 resource "aws_iam_role" "role" {
